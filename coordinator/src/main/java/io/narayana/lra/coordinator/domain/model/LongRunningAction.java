@@ -50,7 +50,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static io.narayana.lra.LRAConstants.ENLIST_PARTICIPANT_LOCK_TIMEOUT;
 import static jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static jakarta.ws.rs.core.Response.Status.TOO_MANY_REQUESTS;
+import static jakarta.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 
 public class LongRunningAction extends BasicAction {
     private static final String LRA_TYPE = "/StateManager/BasicAction/LongRunningAction";
@@ -802,7 +802,7 @@ public class LongRunningAction extends BasicAction {
         if (lock == null) {
             String reason = LRALogger.i18nLogger.warn_enlistment();
             LRALogger.logger.warn(reason);
-            throw new WebApplicationException(reason, TOO_MANY_REQUESTS);
+            throw new WebApplicationException(reason, SERVICE_UNAVAILABLE);
         }
         else {
             try {

@@ -66,7 +66,7 @@ import static io.narayana.lra.LRAConstants.LEAVE;
 import static io.narayana.lra.LRAConstants.STATUS;
 import static io.narayana.lra.LRAConstants.TIMELIMIT_PARAM_NAME;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.TOO_MANY_REQUESTS;
+import static jakarta.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 import static org.eclipse.microprofile.lra.annotation.ws.rs.LRA.LRA_HTTP_CONTEXT_HEADER;
 import static org.eclipse.microprofile.lra.annotation.ws.rs.LRA.LRA_HTTP_PARENT_CONTEXT_HEADER;
 import static org.eclipse.microprofile.lra.annotation.ws.rs.LRA.LRA_HTTP_RECOVERY_HEADER;
@@ -421,7 +421,7 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
                             recoveryUrl = getLRAClient().enlistCompensator(lraId, timeLimit, compensatorLink, previousParticipantData);
                             break;
                         } catch (WebApplicationException e) {
-                            if (e.getResponse().getStatus() != TOO_MANY_REQUESTS.getStatusCode() || i >= enlistMaxRetries) {
+                            if (e.getResponse().getStatus() != SERVICE_UNAVAILABLE.getStatusCode() || i >= enlistMaxRetries) {
                                 throw e;
                             }
                         }
