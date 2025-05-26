@@ -5,58 +5,6 @@
 
 package io.narayana.lra.filter;
 
-import io.narayana.lra.AnnotationResolver;
-import io.narayana.lra.Current;
-import io.narayana.lra.client.LRAParticipantData;
-import io.narayana.lra.client.internal.NarayanaLRAClient;
-import io.narayana.lra.client.internal.proxy.nonjaxrs.LRAParticipant;
-import io.narayana.lra.client.internal.proxy.nonjaxrs.LRAParticipantRegistry;
-import io.narayana.lra.logging.LRALogger;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.ContextNotActiveException;
-import jakarta.ws.rs.core.Link;
-import jakarta.ws.rs.core.UriInfo;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.lra.annotation.AfterLRA;
-import org.eclipse.microprofile.lra.annotation.Compensate;
-import org.eclipse.microprofile.lra.annotation.Complete;
-import org.eclipse.microprofile.lra.annotation.Forget;
-import org.eclipse.microprofile.lra.annotation.LRAStatus;
-import org.eclipse.microprofile.lra.annotation.Status;
-import org.eclipse.microprofile.lra.annotation.ws.rs.LRA;
-import org.eclipse.microprofile.lra.annotation.ws.rs.Leave;
-
-import jakarta.inject.Inject;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerRequestFilter;
-import jakarta.ws.rs.container.ContainerResponseContext;
-import jakarta.ws.rs.container.ContainerResponseFilter;
-import jakarta.ws.rs.container.ResourceInfo;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.ext.Provider;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
-import java.util.regex.Pattern;
-
 import static io.narayana.lra.LRAConstants.AFTER;
 import static io.narayana.lra.LRAConstants.COMPENSATE;
 import static io.narayana.lra.LRAConstants.COMPLETE;
@@ -72,6 +20,56 @@ import static org.eclipse.microprofile.lra.annotation.ws.rs.LRA.LRA_HTTP_PARENT_
 import static org.eclipse.microprofile.lra.annotation.ws.rs.LRA.LRA_HTTP_RECOVERY_HEADER;
 import static org.eclipse.microprofile.lra.annotation.ws.rs.LRA.Type.MANDATORY;
 import static org.eclipse.microprofile.lra.annotation.ws.rs.LRA.Type.NESTED;
+
+import io.narayana.lra.AnnotationResolver;
+import io.narayana.lra.Current;
+import io.narayana.lra.client.LRAParticipantData;
+import io.narayana.lra.client.internal.NarayanaLRAClient;
+import io.narayana.lra.client.internal.proxy.nonjaxrs.LRAParticipant;
+import io.narayana.lra.client.internal.proxy.nonjaxrs.LRAParticipantRegistry;
+import io.narayana.lra.logging.LRALogger;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ContextNotActiveException;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.container.ContainerResponseFilter;
+import jakarta.ws.rs.container.ResourceInfo;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Link;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.Provider;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.regex.Pattern;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.lra.annotation.AfterLRA;
+import org.eclipse.microprofile.lra.annotation.Compensate;
+import org.eclipse.microprofile.lra.annotation.Complete;
+import org.eclipse.microprofile.lra.annotation.Forget;
+import org.eclipse.microprofile.lra.annotation.LRAStatus;
+import org.eclipse.microprofile.lra.annotation.Status;
+import org.eclipse.microprofile.lra.annotation.ws.rs.LRA;
+import org.eclipse.microprofile.lra.annotation.ws.rs.Leave;
 
 @Provider
 @ApplicationScoped
@@ -103,7 +101,7 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
     int enlistMaxRetries;
 
     private boolean isTxInvalid(ContainerRequestContext containerRequestContext, LRA.Type type, URI lraId,
-                                boolean shouldNotBeNull, ArrayList<Progress> progress) {
+            boolean shouldNotBeNull, ArrayList<Progress> progress) {
         if (lraId == null && shouldNotBeNull) {
             abortWith(containerRequestContext, null, Response.Status.PRECONDITION_FAILED.getStatusCode(),
                     type.name() + " but no tx", progress);
@@ -321,13 +319,13 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
 
                 break;
             case REQUIRES_NEW:
-//                    previous = AtomicAction.suspend();
+                //                    previous = AtomicAction.suspend();
                 suspendedLRA = incomingLRA;
 
                 if (progress == null) {
                     progress = new ArrayList<>();
                 }
-                newLRA = lraId = startLRA(containerRequestContext,null, method, timeout, progress);
+                newLRA = lraId = startLRA(containerRequestContext, null, method, timeout, progress);
 
                 if (newLRA == null) {
                     // startLRA will have called abortWith on the request context
@@ -388,12 +386,13 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
 
         if (!endAnnotation) { // don't enlist for methods marked with Compensate, Complete or Leave
             Map<String, String> terminateURIs = NarayanaLRAClient.getTerminationUris(resourceInfo.getResourceClass(),
-                createUriPrefix(containerRequestContext), timeout);
+                    createUriPrefix(containerRequestContext), timeout);
             String timeLimitStr = terminateURIs.get(TIMELIMIT_PARAM_NAME);
             long timeLimit = timeLimitStr == null ? DEFAULT_TIMEOUT_MILLIS : Long.parseLong(timeLimitStr);
 
-            LRAParticipant participant = lraParticipantRegistry != null ?
-                lraParticipantRegistry.getParticipant(resourceInfo.getResourceClass().getName()) : null;
+            LRAParticipant participant = lraParticipantRegistry != null
+                    ? lraParticipantRegistry.getParticipant(resourceInfo.getResourceClass().getName())
+                    : null;
 
             if (terminateURIs.containsKey("Link") || participant != null) {
                 try {
@@ -416,9 +415,10 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
                     // The coordinator needs to hold a lock to enlist an participant. This lock is only waited on for a small amount of
                     // time (potentially even zero time). This means if multiple participants try to enlist at the same time, enlistment
                     // may fail. We therefore re-try a configurable amount of times.
-                    for (int i =0;; i++) {
+                    for (int i = 0;; i++) {
                         try {
-                            recoveryUrl = getLRAClient().enlistCompensator(lraId, timeLimit, compensatorLink, previousParticipantData);
+                            recoveryUrl = getLRAClient().enlistCompensator(lraId, timeLimit, compensatorLink,
+                                    previousParticipantData);
                             break;
                         } catch (WebApplicationException e) {
                             if (e.getResponse().getStatus() != SERVICE_UNAVAILABLE.getStatusCode() || i >= enlistMaxRetries) {
@@ -477,18 +477,19 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
 
     private String createUriPrefix(ContainerRequestContext containerRequestContext) {
         return ConfigProvider.getConfig().getOptionalValue("narayana.lra.base-uri", String.class)
-            .orElseGet(() -> {
-                UriInfo uriInfo = containerRequestContext.getUriInfo();
+                .orElseGet(() -> {
+                    UriInfo uriInfo = containerRequestContext.getUriInfo();
 
-                /*
-                 * Calculate which path to prepend to the LRA participant methods. If there is more than one matching URI
-                 * then the second matched URI comes from either the class level Path annotation or from a sub-resource locator.
-                 * In both cases the second matched URI can be used as a prefix for the LRA participant URIs:
-                 */
-                List<String> matchedURIs = uriInfo.getMatchedURIs();
-                int matchedURI = (matchedURIs.size() > 1 ? 1 : 0);
-                return uriInfo.getBaseUri() + matchedURIs.get(matchedURI);
-            });
+                    /*
+                     * Calculate which path to prepend to the LRA participant methods. If there is more than one matching URI
+                     * then the second matched URI comes from either the class level Path annotation or from a sub-resource
+                     * locator.
+                     * In both cases the second matched URI can be used as a prefix for the LRA participant URIs:
+                     */
+                    List<String> matchedURIs = uriInfo.getMatchedURIs();
+                    int matchedURI = (matchedURIs.size() > 1 ? 1 : 0);
+                    return uriInfo.getBaseUri() + matchedURIs.get(matchedURI);
+                });
     }
 
     @Override
@@ -557,7 +558,7 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
                     } else {
                         // same as ProcessingException case
                         progress = updateProgress(progress,
-                            isCancel ? ProgressStep.CancelFailed : ProgressStep.CloseFailed, e.getMessage());
+                                isCancel ? ProgressStep.CancelFailed : ProgressStep.CloseFailed, e.getMessage());
                     }
                 } catch (ProcessingException e) {
                     progress = updateProgress(progress,
@@ -576,8 +577,8 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
             }
 
             if (responseContext.getStatus() == Response.Status.OK.getStatusCode()
-                && resourceInfo.getResourceMethod() != null
-                && NarayanaLRAClient.isAsyncCompletion(resourceInfo.getResourceMethod())) {
+                    && resourceInfo.getResourceMethod() != null
+                    && NarayanaLRAClient.isAsyncCompletion(resourceInfo.getResourceMethod())) {
                 LRALogger.i18nLogger.warn_lraParticipantqForAsync(
                         resourceInfo.getResourceMethod().getDeclaringClass().getName(),
                         resourceInfo.getResourceMethod().getName(),
@@ -592,7 +593,7 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
              * different warning code for each scenario:
              */
             if (progress != null) {
-                String failureMessage =  processLRAOperationFailures(progress);
+                String failureMessage = processLRAOperationFailures(progress);
 
                 if (failureMessage != null) {
                     responseContext.setEntity(failureMessage);
@@ -643,7 +644,7 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
     // the following structure is used to track progress so that such failures can be reported in the response
     // filter processing
     private enum ProgressStep {
-        Left ("leave succeeded"),
+        Left("leave succeeded"),
         LeaveFailed("leave failed"),
         Started("start succeeded"),
         StartFailed("start failed"),
@@ -736,7 +737,7 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
 
     // the processing performed by the request filter caused the request to abort (without executing application code)
     private void abortWith(ContainerRequestContext containerRequestContext, String lraId, int statusCode,
-                           String message, Collection<Progress> reasons) {
+            String message, Collection<Progress> reasons) {
         // the response filter will set the entity body
         containerRequestContext.abortWith(Response.status(statusCode).entity(message).build());
         // make the reason for the failure available to the response filter
@@ -758,7 +759,7 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
     }
 
     private URI startLRA(ContainerRequestContext containerRequestContext, URI parentLRA, Method method, Long timeout,
-                         ArrayList<Progress> progress) {
+            ArrayList<Progress> progress) {
         // timeout should already have been converted to milliseconds
         String clientId = method.getDeclaringClass().getName() + "#" + method.getName();
 
@@ -819,7 +820,7 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
         }
 
         String uri = value.toASCIIString();
-        Link link =  Link.fromUri(uri).title(key + " URI").rel(key).type(MediaType.TEXT_PLAIN).build();
+        Link link = Link.fromUri(uri).title(key + " URI").rel(key).type(MediaType.TEXT_PLAIN).build();
 
         if (b.length() != 0) {
             b.append(',');
