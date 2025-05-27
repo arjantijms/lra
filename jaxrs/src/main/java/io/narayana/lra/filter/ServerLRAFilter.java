@@ -421,9 +421,21 @@ public class ServerLRAFilter implements ContainerRequestFilter, ContainerRespons
                                     previousParticipantData);
                             break;
                         } catch (WebApplicationException e) {
+
+                            String logMessage = "The coordinator service is unavailable; failing in enlisting the compensator for "
+                                    + lraId +
+                                    ", ENLIST_PARTICIPANT_CLIENT_MAX_RETRY (via MP config property \"lra.participant.client.max.retry\") set to "
+                                    +
+                                    enlistMaxRetries + ". ";
+
                             if (e.getResponse().getStatus() != SERVICE_UNAVAILABLE.getStatusCode() || i >= enlistMaxRetries) {
+
+                                LRALogger.logger.warn(logMessage + "Not retrying.");
+
                                 throw e;
                             }
+
+                            LRALogger.logger.warn(logMessage + " Attempt " + (i + 1) + " of " + enlistMaxRetries + ".");
                         }
                     }
 
